@@ -1,0 +1,21 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t maikonb/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true maikob/react-test npm test
+
+after_success:
+  - docker build -t maikonb/multi-client  ./client
+  - docker build -t maikonb/multi-nginx   ./nginx
+  - docker build -t maikonb/multi-server  ./server
+  - docker build -t maikonb/multi-worker  ./worker
+  # Log in to the docker CLI (docker login com user/passw)
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push maikonb/multi-client
+  - docker push maikonb/multi-nginx
+  - docker push maikonb/multi-server
+  - docker push maikonb/multi-worker
